@@ -2,14 +2,19 @@
   "name": "chimeradb",
   "version": "0.0.1",
   "description": "A hybrid database system with both SQL and NoSQL structures, supporting dynamic storage.",
-  "main": "dist/main.js",
+  "main": "dist/chimera.js",
+  "types": "dist/chimera.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" "
+    "test": "echo \"Error: no test specified\" ",
+    "build": "tsc"
   },
   "author": "naveen_r_sam",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.14.9",
     "typescript": "^5.5.3"
-  }
+  },
+  "files": [
+    "dist/**/*"
+  ]
 }
