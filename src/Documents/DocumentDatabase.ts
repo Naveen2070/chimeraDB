@@ -2,13 +2,10 @@ import { Document } from './Document';
 
 /**
  * Represents a database of documents.
- *
- * @class DocumentDatabase
- * @export
  */
 export class DocumentDatabase {
   /**
-   * A map of collection names to arrays of documents.
+   * Maps collection names to arrays of documents.
    */
   private collections: { [key: string]: Document[] } = {};
 
@@ -64,5 +61,14 @@ export class DocumentDatabase {
    */
   getCollections(): { [key: string]: Document[] } {
     return this.collections;
+  }
+
+  /**
+   * Sets the collections of the database.
+   *
+   * @param { { [key: string]: Document[] } } collections - The collections to set.
+   */
+  setCollections(collections: { [key: string]: Document[] }): void {
+    this.collections = collections;
   }
 }

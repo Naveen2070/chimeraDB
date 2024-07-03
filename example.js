@@ -1,5 +1,6 @@
 const { ChimeraDB } = require('./dist/chimera');
 
+// Create a new database and insert data
 const chimera = new ChimeraDB('MyDatabase');
 chimera.createDB();
 chimera.createTable('Users', ['ID', 'Name', 'Email']);
@@ -19,3 +20,11 @@ chimera.insertIntoCollection('Documents', {
 });
 
 chimera.saveDB();
+
+// Load the existing database
+const chimera2 = new ChimeraDB('AnotherDatabase');
+chimera2.use('MyDatabase');
+
+// Retrieve data to verify it loaded correctly
+console.log(chimera2.selectFromTable('Users'));
+console.log(chimera2.selectFromCollection('Documents'));

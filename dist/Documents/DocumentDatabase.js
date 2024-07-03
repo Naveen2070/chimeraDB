@@ -3,13 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocumentDatabase = void 0;
 /**
  * Represents a database of documents.
- *
- * @class DocumentDatabase
- * @export
  */
 class DocumentDatabase {
     /**
-     * A map of collection names to arrays of documents.
+     * Maps collection names to arrays of documents.
      */
     collections = {};
     /**
@@ -61,6 +58,14 @@ class DocumentDatabase {
      */
     getCollections() {
         return this.collections;
+    }
+    /**
+     * Sets the collections of the database.
+     *
+     * @param { { [key: string]: Document[] } } collections - The collections to set.
+     */
+    setCollections(collections) {
+        this.collections = collections;
     }
 }
 exports.DocumentDatabase = DocumentDatabase;
