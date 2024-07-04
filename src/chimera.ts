@@ -13,22 +13,9 @@ import * as path from 'path';
  *
  * @class ChimeraDB
  */
-/**
- * Represents a ChimeraDB instance.
- *
- * @class ChimeraDB
- */
 class ChimeraDB {
   /**
-   * Database name.
-   *
-   * @private
-   * @type {string}
-   */
-  private dbName: string;
-
-  /**
-   * Table database.
+   * The table database instance.
    *
    * @private
    * @type {TableDatabase}
@@ -36,7 +23,7 @@ class ChimeraDB {
   private tableDB: TableDatabase;
 
   /**
-   * Document database.
+   * The document database instance.
    *
    * @private
    * @type {DocumentDatabase}
@@ -44,18 +31,22 @@ class ChimeraDB {
   private documentDB: DocumentDatabase;
 
   /**
-   * Creates an instance of ChimeraDB.
+   * The name of the database.
    *
+   * @private
+   * @type {string}
+   */
+  private dbName: string;
+
+  /**
+   * Constructs a new instance of ChimeraDB.
+   *
+   * @constructor
    * @param {string} dbName - The name of the database.
    */
   constructor(dbName: string) {
-    // Create an instance of TableDatabase and assign it to the tableDB property
     this.tableDB = new TableDatabase();
-
-    // Create an instance of DocumentDatabase and assign it to the documentDB property
     this.documentDB = new DocumentDatabase();
-
-    // Assign the provided database name to the dbName property
     this.dbName = dbName;
   }
 
@@ -65,10 +56,10 @@ class ChimeraDB {
    * @returns {void}
    */
   createDB(): void {
-    // Resolve the file path for the database file
+    // Resolve the file path
     const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
 
-    // Create an empty file in binary format
+    // Write an empty string to the file
     fs.writeFileSync(filePath, '', 'binary');
 
     // Log that the database was created
@@ -76,34 +67,161 @@ class ChimeraDB {
   }
 
   /**
-   * Saves the database to a file in hex format.
+   * Saves the database to a file.
    *
    * @returns {void}
    */
-  saveDB(): void {
-    // Resolve the file path for the database file
+  private saveDB(): void {
+    // Resolve the file path
     const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
 
-    // Prepare the data to be saved
+    // Get the tables and collections from the databases
     const data = {
-      tables: this.tableDB.getTables(), // Get the tables from the table database
-      collections: this.documentDB.getCollections(), // Get the collections from the document database
+      tables: this.tableDB.getTables(),
+      collections: this.documentDB.getCollections(),
     };
 
-    // Convert the data to JSON string
+    // Convert the data to JSON format
     const jsonData = JSON.stringify(data);
 
-    // Convert the JSON string to binary data
+    // Convert the JSON data to a binary buffer
     const binaryData = Buffer.from(jsonData, 'utf-8');
 
-    // Convert the binary data to hex format
+    // Convert the binary buffer to a hexadecimal string
     const hexData = binaryData.toString('hex');
 
-    // Write the hex data to the file
+    // Write the hexadecimal string to the file
     fs.writeFileSync(filePath, hexData, 'binary');
+  }
 
-    // Log that the database was saved
-    console.log(`Database ${this.dbName}.cdb saved.`);
+  /**
+   * Loads the database from a file.
+   *
+   * @returns {void}
+   */
+  private loadDB(): void {
+    // Resolve the file path
+    const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Database ${this.dbName}.cdb does not exist.`);
+    }
+
+    // Read the file as a binary buffer
+    const hexData = fs.readFileSync(filePath, 'binary');
+
+    // Convert the binary buffer to a binary buffer
+    const binaryData = Buffer.from(hexData, 'hex');
+
+    // Convert the binary buffer to a string
+    const jsonData = binaryData.toString('utf-8');
+
+    // Parse the JSON string into an object
+    const data = JSON.parse(jsonData);
+
+    // Set the tables and collections in the databases
+    this.tableDB.setTables(data.tables);
+    this.documentDB.setCollections(data.collections);
+  }
+
+  /**
+   * Creates a new table in the database.
+   *
+   * @param {string} name - The name of the table.
+   * @param {string[]} columns - The columns of the table.
+   * @returns {void}
+   */
+  createTable(name: string, columns: string[]): void {
+    // Load the database
+    this.loadDB();
+
+    // Create the table
+    this.tableDB.createTable(name, columns);
+
+    // Save the database
+    this.saveDB();
+  }
+
+  /**
+   * Inserts a row of values into the specified table.
+   *
+   * @param {string} name - The name of the table to insert into.
+   * @param {any[]} values - The values to insert into the table.
+   * @returns {void}
+   */
+  insertIntoTable(name: string, values: any[]): void {
+    // Load the database
+    this.loadDB();
+
+    // Insert the values into the table
+    this.tableDB.insertIntoTable(name, values);
+
+    // Save the database
+    this.saveDB();
+  }
+
+  /**
+   * Retrieves all rows from the specified table.
+   *
+   * @param {string} name - The name of the table to retrieve from.
+   * @returns {any[][]} An array of rows in the specified table.
+   */
+  selectFromTable(name: string): any[][] {
+    // Load the database
+    this.loadDB();
+
+    // Retrieve the rows from the table
+    return this.tableDB.selectFromTable(name);
+  }
+
+  /**
+   * Creates a new collection in the database.
+   *
+   * @param {string} name - The name of the collection.
+   * @returns {void}
+   */
+  createCollection(name: string): void {
+    // Load the database
+    this.loadDB();
+
+    // Create the collection
+    this.documentDB.createCollection(name);
+
+    // Save the database
+    this.saveDB();
+  }
+
+  /**
+   * Inserts a document into the specified collection.
+   *
+   * @param {string} name - The name of the collection to insert into.
+   * @param {any} doc - The document to insert.
+   * @returns {void}
+   */
+  insertIntoCollection(name: string, doc: any): void {
+    // Load the database
+    this.loadDB();
+
+    // Insert the document into the collection
+    this.documentDB.insertIntoCollection(name, doc);
+
+    // Save the database
+    this.saveDB();
+  }
+
+  /**
+   * Retrieves all documents from the specified collection.
+   *
+   * @param {string} name - The name of the collection to retrieve from.
+   * @returns {any[]} An array of documents in the specified collection.
+   */
+  selectFromCollection(name: string): any[] {
+    // Load the database
+    this.loadDB();
+
+    // Retrieve the documents from the collection
+    return this.documentDB.selectFromCollection(name);
   }
 
   /**
@@ -113,7 +231,7 @@ class ChimeraDB {
    * @returns {void}
    */
   use(dbName: string): void {
-    // Resolve the file path for the database file
+    // Resolve the file path
     const filePath = path.resolve(__dirname, `${dbName}.cdb`);
 
     // Check if the file exists
@@ -121,88 +239,25 @@ class ChimeraDB {
       throw new Error(`Database ${dbName}.cdb does not exist.`);
     }
 
-    // Read the file in binary format
+    // Read the file as a binary buffer
     const hexData = fs.readFileSync(filePath, 'binary');
 
-    // Convert the hex data to binary data
+    // Convert the binary buffer to a binary buffer
     const binaryData = Buffer.from(hexData, 'hex');
 
-    // Convert the binary data to JSON format
+    // Convert the binary buffer to a string
     const jsonData = binaryData.toString('utf-8');
 
-    // Parse the JSON data into an object
+    // Parse the JSON string into an object
     const data = JSON.parse(jsonData);
 
-    // Set the database name and tables/collections
+    // Set the database name and tables and collections in the databases
     this.dbName = dbName;
     this.tableDB.setTables(data.tables);
     this.documentDB.setCollections(data.collections);
 
     // Log that the database was loaded
     console.log(`Database ${dbName}.cdb loaded.`);
-  }
-
-  /**
-   * Creates a new table in the database.
-   *
-   * @param {string} name - Table name.
-   * @param {string[]} columns - Columns of the table.
-   * @returns {void}
-   */
-  createTable(name: string, columns: string[]): void {
-    this.tableDB.createTable(name, columns);
-  }
-
-  /**
-   * Inserts a row of values into the specified table.
-   *
-   * @param {string} name - Table name to insert into.
-   * @param {any[]} values - Values to insert into the table.
-   * @returns {void}
-   */
-  insertIntoTable(name: string, values: any[]): void {
-    this.tableDB.insertIntoTable(name, values);
-  }
-
-  /**
-   * Retrieves all rows from the specified table.
-   *
-   * @param {string} name - Table name to retrieve from.
-   * @returns {any[][]} Array of rows in the specified table.
-   */
-  selectFromTable(name: string): any[][] {
-    return this.tableDB.selectFromTable(name);
-  }
-
-  /**
-   * Creates a new collection in the database.
-   *
-   * @param {string} name - Collection name.
-   * @returns {void}
-   */
-  createCollection(name: string): void {
-    this.documentDB.createCollection(name);
-  }
-
-  /**
-   * Inserts a document into the specified collection.
-   *
-   * @param {string} name - Collection name to insert into.
-   * @param {any} doc - Document to insert.
-   * @returns {void}
-   */
-  insertIntoCollection(name: string, doc: any): void {
-    this.documentDB.insertIntoCollection(name, doc);
-  }
-
-  /**
-   * Retrieves all documents from the specified collection.
-   *
-   * @param {string} name - Collection name to retrieve from.
-   * @returns {any[]} Array of documents in the specified collection.
-   */
-  selectFromCollection(name: string): any[] {
-    return this.documentDB.selectFromCollection(name);
   }
 }
 
