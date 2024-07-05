@@ -29,6 +29,13 @@ export declare class TableDatabase {
      */
     selectFromTable(name: string): any[][];
     /**
+     * Drops (deletes) a table from the database.
+     *
+     * @param {string} name - The name of the table to drop.
+     * @returns {void}
+     */
+    dropTable(name: string): void;
+    /**
      * Retrieves all tables in the database.
      * @returns {{ [key: string]: Table }} A map of table names to table objects.
      */

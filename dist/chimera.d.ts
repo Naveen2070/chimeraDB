@@ -3,110 +3,123 @@
  *
  * @class ChimeraDB
  */
-/**
- * Represents a ChimeraDB instance.
- *
- * @class ChimeraDB
- */
 declare class ChimeraDB {
-    /**
-     * The table database instance.
-     *
-     * @private
-     * @type {TableDatabase}
-     */
     private tableDB;
-    /**
-     * The document database instance.
-     *
-     * @private
-     * @type {DocumentDatabase}
-     */
     private documentDB;
-    /**
-     * The name of the database.
-     *
-     * @private
-     * @type {string}
-     */
     private dbName;
-    /**
-     * Constructs a new instance of ChimeraDB.
-     *
-     * @constructor
-     * @param {string} dbName - The name of the database.
-     */
+    private currentLogicalDB;
     constructor(dbName: string);
     /**
-     * Creates a new database file.
+     * Creates a new physical .cdb file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createDB(): void;
+    private createPhysicalDB;
     /**
-     * Saves the database to a file.
+     * Drops (deletes) the physical database file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
+     */
+    dropDatabaseGroup(): Promise<void>;
+    /**
+     * Drops (deletes) a logical database from the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to drop.
+     * @returns {Promise<void>}
+     */
+    dropDatabase(logicalDBName: string): Promise<void>;
+    /**
+     * Saves the current logical database to the physical .cdb file.
+     *
+     * @returns {Promise<void>}
      */
     private saveDB;
     /**
-     * Loads the database from a file.
+     * Loads the current logical database from the physical .cdb file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
     private loadDB;
     /**
-     * Creates a new table in the database.
+     * Connects to an existing physical .cdb file.
+     *
+     * @param {string} dbName - The name of the physical database to connect to.
+     * @returns {Promise<void>}
+     */
+    connect(dbName: string): Promise<void>;
+    /**
+     * Creates a new logical database within the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to create.
+     * @returns {Promise<void>}
+     */
+    createDB(logicalDBName: string): Promise<void>;
+    /**
+     * Uses a logical database within the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to use.
+     * @returns {Promise<void>}
+     */
+    use(logicalDBName: string): Promise<void>;
+    /**
+     * Creates a new table in the current logical database.
      *
      * @param {string} name - The name of the table.
      * @param {string[]} columns - The columns of the table.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createTable(name: string, columns: string[]): void;
+    createTable(name: string, columns: string[]): Promise<void>;
     /**
      * Inserts a row of values into the specified table.
      *
      * @param {string} name - The name of the table to insert into.
      * @param {any[]} values - The values to insert into the table.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    insertIntoTable(name: string, values: any[]): void;
+    insertIntoTable(name: string, values: any[]): Promise<void>;
     /**
      * Retrieves all rows from the specified table.
      *
      * @param {string} name - The name of the table to retrieve from.
-     * @returns {any[][]} An array of rows in the specified table.
+     * @returns {Promise<any[][]>}
      */
-    selectFromTable(name: string): any[][];
+    selectFromTable(name: string): Promise<any[][]>;
     /**
-     * Creates a new collection in the database.
+     * Creates a new collection in the current logical database.
      *
      * @param {string} name - The name of the collection.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createCollection(name: string): void;
+    createCollection(name: string): Promise<void>;
     /**
      * Inserts a document into the specified collection.
      *
      * @param {string} name - The name of the collection to insert into.
      * @param {any} doc - The document to insert.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    insertIntoCollection(name: string, doc: any): void;
+    insertIntoCollection(name: string, doc: any): Promise<void>;
     /**
      * Retrieves all documents from the specified collection.
      *
      * @param {string} name - The name of the collection to retrieve from.
-     * @returns {any[]} An array of documents in the specified collection.
+     * @returns {Promise<any[]>}
      */
-    selectFromCollection(name: string): any[];
+    selectFromCollection(name: string): Promise<any[]>;
     /**
-     * Loads an existing database file.
+     * Drops a table from the current logical database.
      *
-     * @param {string} dbName - The name of the database to load.
-     * @returns {void}
+     * @param {string} name - The name of the table to drop.
+     * @returns {Promise<void>}
      */
-    use(dbName: string): void;
+    dropTable(name: string): Promise<void>;
+    /**
+     * Drops a collection from the current logical database.
+     *
+     * @param {string} name - The name of the collection to drop.
+     * @returns {Promise<void>}
+     */
+    dropCollection(name: string): Promise<void>;
 }
 export { ChimeraDB };
 //# sourceMappingURL=chimera.d.ts.map

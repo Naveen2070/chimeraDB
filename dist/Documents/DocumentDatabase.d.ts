@@ -31,6 +31,13 @@ export declare class DocumentDatabase {
      */
     selectFromCollection(name: string): Document[];
     /**
+     * Drops (deletes) a collection from the database.
+     *
+     * @param {string} name - The name of the collection to drop.
+     * @returns {void}
+     */
+    dropCollection(name: string): void;
+    /**
      * Retrieves all collections in the database.
      *
      * @returns {{

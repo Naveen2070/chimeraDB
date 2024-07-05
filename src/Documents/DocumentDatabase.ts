@@ -53,6 +53,19 @@ export class DocumentDatabase {
   }
 
   /**
+   * Drops (deletes) a collection from the database.
+   *
+   * @param {string} name - The name of the collection to drop.
+   * @returns {void}
+   */
+  dropCollection(name: string): void {
+    if (!this.collections[name]) {
+      throw new Error(`Collection ${name} does not exist.`);
+    }
+    delete this.collections[name];
+  }
+
+  /**
    * Retrieves all collections in the database.
    *
    * @returns {{

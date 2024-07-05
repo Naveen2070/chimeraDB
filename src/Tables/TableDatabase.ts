@@ -54,6 +54,19 @@ export class TableDatabase {
   }
 
   /**
+   * Drops (deletes) a table from the database.
+   *
+   * @param {string} name - The name of the table to drop.
+   * @returns {void}
+   */
+  dropTable(name: string): void {
+    if (!this.tables[name]) {
+      throw new Error(`Table ${name} does not exist.`);
+    }
+    delete this.tables[name];
+  }
+
+  /**
    * Retrieves all tables in the database.
    * @returns {{ [key: string]: Table }} A map of table names to table objects.
    */

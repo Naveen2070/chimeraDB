@@ -1,35 +1,53 @@
 const { ChimeraDB } = require('./dist/chimera');
 
-// Create a new database and insert data
-const chimera = new ChimeraDB('MyDatabase');
-chimera.createDB();
-chimera.createTable('Users', ['ID', 'Name', 'Email']);
-chimera.insertIntoTable('Users', [1, 'Alice', 'alice@example.com']);
-chimera.insertIntoTable('Users', [2, 'Bob', 'bob@example.com']);
+async function main() {
+  // Create a new ChimeraDB instance
+  const chimera = new ChimeraDB('MyDatabase');
 
-chimera.createCollection('Documents');
-chimera.insertIntoCollection('Documents', {
-  id: '1',
-  title: 'Document 1',
-  content: 'Content of Document 1',
-});
-chimera.insertIntoCollection('Documents', {
-  id: '2',
-  title: 'Document 2',
-  content: 'Content of Document 2',
-});
+  // Example usage
+  try {
+    // Create a logical database
+    await chimera.createDB('UserDB');
 
-// Load the existing database
-const chimera2 = new ChimeraDB('AnotherDatabase');
-chimera2.use('MyDatabase');
+    // Create a table in the current logical database
+    await chimera.createTable('Users', ['id', 'name', 'email']);
 
-// Retrieve data to verify it loaded correctly
-console.log(chimera2.selectFromTable('Users'));
-console.log(chimera2.selectFromCollection('Documents'));
+    // Insert rows into the table
+    await chimera.insertIntoTable('Users', [1, 'Alice', 'alice@example.com']);
+    await chimera.insertIntoTable('Users', [2, 'Bob', 'bob@example.com']);
 
-// Perform more operations with immediate updates
-chimera2.createTable('Products', ['ID', 'Name', 'Price']);
-chimera2.insertIntoTable('Products', [1, 'Laptop', 1500]);
-chimera2.insertIntoTable('Products', [2, 'Phone', 800]);
+    // Select and display all rows from the table
+    const users = await chimera.selectFromTable('Users');
+    console.log('Users:', users);
 
-console.log(chimera2.selectFromTable('Products'));
+    // Create a collection in the current logical database
+    await chimera.createCollection('Documents');
+
+    // Insert documents into the collection
+    await chimera.insertIntoCollection('Documents', {
+      title: 'Document 1',
+      content: 'Content 1',
+    });
+    await chimera.insertIntoCollection('Documents', {
+      title: 'Document 2',
+      content: 'Content 2',
+    });
+
+    // Select and display all documents from the collection
+    const documents = await chimera.selectFromCollection('Documents');
+    console.log('Documents:', documents);
+
+    // Drop the table and collection
+    await chimera.dropTable('Users');
+    await chimera.dropCollection('Documents');
+
+    // Drop the logical database
+    await chimera.dropDatabase('UserDB');
+
+    // Drop the physical database group (including all logical databases)
+    await chimera.dropDatabaseGroup();
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+main();

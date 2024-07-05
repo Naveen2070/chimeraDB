@@ -33,213 +33,230 @@ const path = __importStar(require("path"));
  *
  * @class ChimeraDB
  */
-/**
- * Represents a ChimeraDB instance.
- *
- * @class ChimeraDB
- */
 class ChimeraDB {
-    /**
-     * The table database instance.
-     *
-     * @private
-     * @type {TableDatabase}
-     */
     tableDB;
-    /**
-     * The document database instance.
-     *
-     * @private
-     * @type {DocumentDatabase}
-     */
     documentDB;
-    /**
-     * The name of the database.
-     *
-     * @private
-     * @type {string}
-     */
     dbName;
-    /**
-     * Constructs a new instance of ChimeraDB.
-     *
-     * @constructor
-     * @param {string} dbName - The name of the database.
-     */
+    currentLogicalDB = null;
     constructor(dbName) {
         this.tableDB = new TableDatabase_1.TableDatabase();
         this.documentDB = new DocumentDatabase_1.DocumentDatabase();
         this.dbName = dbName;
+        this.createPhysicalDB();
     }
     /**
-     * Creates a new database file.
+     * Creates a new physical .cdb file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createDB() {
-        // Resolve the file path
+    async createPhysicalDB() {
         const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
-        // Write an empty string to the file
-        fs.writeFileSync(filePath, '', 'binary');
-        // Log that the database was created
-        console.log(`Database ${this.dbName}.cdb created.`);
+        if (!fs.existsSync(filePath)) {
+            await fs.promises.writeFile(filePath, JSON.stringify({}), 'binary');
+            console.log(`Physical database file ${this.dbName}.cdb created.`);
+        }
     }
     /**
-     * Saves the database to a file.
+     * Drops (deletes) the physical database file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    saveDB() {
-        // Resolve the file path
+    async dropDatabaseGroup() {
         const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
-        // Get the tables and collections from the databases
+        if (fs.existsSync(filePath)) {
+            await fs.promises.unlink(filePath);
+            console.log(`Physical database group ${this.dbName}.cdb deleted.`);
+        }
+        else {
+            throw new Error(`Physical database group ${this.dbName}.cdb does not exist.`);
+        }
+    }
+    /**
+     * Drops (deletes) a logical database from the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to drop.
+     * @returns {Promise<void>}
+     */
+    async dropDatabase(logicalDBName) {
+        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const dbData = JSON.parse(await fs.promises.readFile(filePath, 'binary'));
+        if (!dbData[logicalDBName]) {
+            throw new Error(`Logical database ${logicalDBName} does not exist.`);
+        }
+        delete dbData[logicalDBName];
+        await fs.promises.writeFile(filePath, JSON.stringify(dbData), 'binary');
+        console.log(`Logical database ${logicalDBName} dropped.`);
+    }
+    /**
+     * Saves the current logical database to the physical .cdb file.
+     *
+     * @returns {Promise<void>}
+     */
+    async saveDB() {
+        if (!this.currentLogicalDB) {
+            console.error('No logical database selected.');
+            return;
+        }
+        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
         const data = {
             tables: this.tableDB.getTables(),
             collections: this.documentDB.getCollections(),
         };
-        // Convert the data to JSON format
-        const jsonData = JSON.stringify(data);
-        // Convert the JSON data to a binary buffer
-        const binaryData = Buffer.from(jsonData, 'utf-8');
-        // Convert the binary buffer to a hexadecimal string
-        const hexData = binaryData.toString('hex');
-        // Write the hexadecimal string to the file
-        fs.writeFileSync(filePath, hexData, 'binary');
+        const hexData = Buffer.from(JSON.stringify(data), 'utf-8').toString('hex');
+        const dbData = JSON.parse(await fs.promises.readFile(filePath, 'binary'));
+        dbData[this.currentLogicalDB] = hexData;
+        await fs.promises.writeFile(filePath, JSON.stringify(dbData), 'binary');
     }
     /**
-     * Loads the database from a file.
+     * Loads the current logical database from the physical .cdb file.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    loadDB() {
-        // Resolve the file path
-        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
-        // Check if the file exists
-        if (!fs.existsSync(filePath)) {
-            throw new Error(`Database ${this.dbName}.cdb does not exist.`);
+    async loadDB() {
+        if (!this.currentLogicalDB) {
+            console.error('No logical database selected.');
+            return;
         }
-        // Read the file as a binary buffer
-        const hexData = fs.readFileSync(filePath, 'binary');
-        // Convert the binary buffer to a binary buffer
-        const binaryData = Buffer.from(hexData, 'hex');
-        // Convert the binary buffer to a string
-        const jsonData = binaryData.toString('utf-8');
-        // Parse the JSON string into an object
+        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const dbData = JSON.parse(await fs.promises.readFile(filePath, 'binary'));
+        if (!dbData[this.currentLogicalDB]) {
+            throw new Error(`Logical database ${this.currentLogicalDB} does not exist.`);
+        }
+        const hexData = dbData[this.currentLogicalDB];
+        const jsonData = Buffer.from(hexData, 'hex').toString('utf-8');
         const data = JSON.parse(jsonData);
-        // Set the tables and collections in the databases
         this.tableDB.setTables(data.tables);
         this.documentDB.setCollections(data.collections);
     }
     /**
-     * Creates a new table in the database.
+     * Connects to an existing physical .cdb file.
+     *
+     * @param {string} dbName - The name of the physical database to connect to.
+     * @returns {Promise<void>}
+     */
+    async connect(dbName) {
+        const filePath = path.resolve(__dirname, `${dbName}.cdb`);
+        if (!fs.existsSync(filePath)) {
+            throw new Error(`Physical database file ${dbName}.cdb does not exist.`);
+        }
+        this.dbName = dbName;
+        console.log(`Connected to physical database ${dbName}.cdb.`);
+    }
+    /**
+     * Creates a new logical database within the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to create.
+     * @returns {Promise<void>}
+     */
+    async createDB(logicalDBName) {
+        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const dbData = JSON.parse(await fs.promises.readFile(filePath, 'binary'));
+        if (dbData[logicalDBName]) {
+            throw new Error(`Logical database ${logicalDBName} already exists.`);
+        }
+        dbData[logicalDBName] = '';
+        await fs.promises.writeFile(filePath, JSON.stringify(dbData), 'binary');
+        console.log(`Logical database ${logicalDBName} created.`);
+    }
+    /**
+     * Uses a logical database within the physical .cdb file.
+     *
+     * @param {string} logicalDBName - The name of the logical database to use.
+     * @returns {Promise<void>}
+     */
+    async use(logicalDBName) {
+        this.currentLogicalDB = logicalDBName;
+        await this.loadDB();
+        console.log(`Using logical database ${logicalDBName}.`);
+    }
+    /**
+     * Creates a new table in the current logical database.
      *
      * @param {string} name - The name of the table.
      * @param {string[]} columns - The columns of the table.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createTable(name, columns) {
-        // Load the database
-        this.loadDB();
-        // Create the table
+    async createTable(name, columns) {
+        await this.loadDB();
         this.tableDB.createTable(name, columns);
-        // Save the database
-        this.saveDB();
+        await this.saveDB();
     }
     /**
      * Inserts a row of values into the specified table.
      *
      * @param {string} name - The name of the table to insert into.
      * @param {any[]} values - The values to insert into the table.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    insertIntoTable(name, values) {
-        // Load the database
-        this.loadDB();
-        // Insert the values into the table
+    async insertIntoTable(name, values) {
+        await this.loadDB();
         this.tableDB.insertIntoTable(name, values);
-        // Save the database
-        this.saveDB();
+        await this.saveDB();
     }
     /**
      * Retrieves all rows from the specified table.
      *
      * @param {string} name - The name of the table to retrieve from.
-     * @returns {any[][]} An array of rows in the specified table.
+     * @returns {Promise<any[][]>}
      */
-    selectFromTable(name) {
-        // Load the database
-        this.loadDB();
-        // Retrieve the rows from the table
+    async selectFromTable(name) {
+        await this.loadDB();
         return this.tableDB.selectFromTable(name);
     }
     /**
-     * Creates a new collection in the database.
+     * Creates a new collection in the current logical database.
      *
      * @param {string} name - The name of the collection.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    createCollection(name) {
-        // Load the database
-        this.loadDB();
-        // Create the collection
+    async createCollection(name) {
+        await this.loadDB();
         this.documentDB.createCollection(name);
-        // Save the database
-        this.saveDB();
+        await this.saveDB();
     }
     /**
      * Inserts a document into the specified collection.
      *
      * @param {string} name - The name of the collection to insert into.
      * @param {any} doc - The document to insert.
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    insertIntoCollection(name, doc) {
-        // Load the database
-        this.loadDB();
-        // Insert the document into the collection
+    async insertIntoCollection(name, doc) {
+        await this.loadDB();
         this.documentDB.insertIntoCollection(name, doc);
-        // Save the database
-        this.saveDB();
+        await this.saveDB();
     }
     /**
      * Retrieves all documents from the specified collection.
      *
      * @param {string} name - The name of the collection to retrieve from.
-     * @returns {any[]} An array of documents in the specified collection.
+     * @returns {Promise<any[]>}
      */
-    selectFromCollection(name) {
-        // Load the database
-        this.loadDB();
-        // Retrieve the documents from the collection
+    async selectFromCollection(name) {
+        await this.loadDB();
         return this.documentDB.selectFromCollection(name);
     }
     /**
-     * Loads an existing database file.
+     * Drops a table from the current logical database.
      *
-     * @param {string} dbName - The name of the database to load.
-     * @returns {void}
+     * @param {string} name - The name of the table to drop.
+     * @returns {Promise<void>}
      */
-    use(dbName) {
-        // Resolve the file path
-        const filePath = path.resolve(__dirname, `${dbName}.cdb`);
-        // Check if the file exists
-        if (!fs.existsSync(filePath)) {
-            throw new Error(`Database ${dbName}.cdb does not exist.`);
-        }
-        // Read the file as a binary buffer
-        const hexData = fs.readFileSync(filePath, 'binary');
-        // Convert the binary buffer to a binary buffer
-        const binaryData = Buffer.from(hexData, 'hex');
-        // Convert the binary buffer to a string
-        const jsonData = binaryData.toString('utf-8');
-        // Parse the JSON string into an object
-        const data = JSON.parse(jsonData);
-        // Set the database name and tables and collections in the databases
-        this.dbName = dbName;
-        this.tableDB.setTables(data.tables);
-        this.documentDB.setCollections(data.collections);
-        // Log that the database was loaded
-        console.log(`Database ${dbName}.cdb loaded.`);
+    async dropTable(name) {
+        await this.loadDB();
+        this.tableDB.dropTable(name);
+        await this.saveDB();
+    }
+    /**
+     * Drops a collection from the current logical database.
+     *
+     * @param {string} name - The name of the collection to drop.
+     * @returns {Promise<void>}
+     */
+    async dropCollection(name) {
+        await this.loadDB();
+        this.documentDB.dropCollection(name);
+        await this.saveDB();
     }
 }
 exports.ChimeraDB = ChimeraDB;
