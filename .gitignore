@@ -12,6 +12,9 @@
 # production
 /build
 
+# Ignore .cdb.db files
+*.cdb.db
+
 # misc
 
 .DS_Store

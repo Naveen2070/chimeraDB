@@ -1,53 +1,49 @@
-const { ChimeraDB } = require('./dist/chimera');
+const { connect, create } = require('./dist/main');
 
-async function main() {
-  // Create a new ChimeraDB instance
-  const chimera = new ChimeraDB('MyDatabase');
+function Db() {
+  // Create a new database instance if it doesn't exist
+  const db = create('testDB');
 
-  // Example usage
-  try {
-    // Create a logical database
-    await chimera.createDB('UserDB');
+  // Create a new table
+  db.createTable('users', ['id', 'name', 'email']);
 
-    // Create a table in the current logical database
-    await chimera.createTable('Users', ['id', 'name', 'email']);
+  // Insert into the table
+  db.insertIntoTable('users', [1, 'Alice', 'alice@example.com']);
+  db.insertIntoTable('users', [2, 'Bob', 'bob@example.com']);
 
-    // Insert rows into the table
-    await chimera.insertIntoTable('Users', [1, 'Alice', 'alice@example.com']);
-    await chimera.insertIntoTable('Users', [2, 'Bob', 'bob@example.com']);
+  // Create a new collection
+  db.createCollection('products');
 
-    // Select and display all rows from the table
-    const users = await chimera.selectFromTable('Users');
-    console.log('Users:', users);
+  // Insert into the collection
+  db.insertIntoCollection('products', { id: 1, name: 'Laptop', price: 999.99 });
+  db.insertIntoCollection('products', { id: 2, name: 'Phone', price: 699.99 });
 
-    // Create a collection in the current logical database
-    await chimera.createCollection('Documents');
+  // Retrieve data from the database
+  getDb();
 
-    // Insert documents into the collection
-    await chimera.insertIntoCollection('Documents', {
-      title: 'Document 1',
-      content: 'Content 1',
-    });
-    await chimera.insertIntoCollection('Documents', {
-      title: 'Document 2',
-      content: 'Content 2',
-    });
+  // Drop the table
+  db.dropTable('users');
 
-    // Select and display all documents from the collection
-    const documents = await chimera.selectFromCollection('Documents');
-    console.log('Documents:', documents);
+  // Drop the collection
+  db.dropCollection('products');
 
-    // Drop the table and collection
-    await chimera.dropTable('Users');
-    await chimera.dropCollection('Documents');
-
-    // Drop the logical database
-    await chimera.dropDatabase('UserDB');
-
-    // Drop the physical database group (including all logical databases)
-    await chimera.dropDatabaseGroup();
-  } catch (error) {
-    console.error('Error:', error.message);
-  }
+  // Drop the database
+  db.dropDatabase();
 }
-main();
+
+// Run the database operations
+Db();
+
+// Function to retrieve data from the database
+function getDb() {
+  // Connect to the existing database
+  const db = connect('testDB');
+
+  // Retrieve products from collection
+  const products = db.selectFromCollection('products');
+  console.log('Products:', products);
+
+  // Retrieve users from table
+  const users = db.selectFromTable('users');
+  console.log('Users:', users);
+}

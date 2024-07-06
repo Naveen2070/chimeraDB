@@ -24,8 +24,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChimeraDB = void 0;
-const TableDatabase_1 = require("./Tables/TableDatabase");
-const DocumentDatabase_1 = require("./Documents/DocumentDatabase");
+const TableDatabase_1 = require("../Tables/TableDatabase");
+const DocumentDatabase_1 = require("../Documents/DocumentDatabase");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 /**
@@ -33,10 +33,35 @@ const path = __importStar(require("path"));
  *
  * @class ChimeraDB
  */
+/**
+ * Represents a ChimeraDB instance.
+ *
+ * @class ChimeraDB
+ */
 class ChimeraDB {
+    /**
+     * An instance of TableDatabase.
+     *
+     * @type {TableDatabase}
+     */
     tableDB;
+    /**
+     * An instance of DocumentDatabase.
+     *
+     * @type {DocumentDatabase}
+     */
     documentDB;
+    /**
+     * The name of the database.
+     *
+     * @type {string}
+     */
     dbName;
+    /**
+     * Creates an instance of ChimeraDB.
+     *
+     * @param {string} dbName  The name of the database.
+     */
     constructor(dbName) {
         this.tableDB = new TableDatabase_1.TableDatabase();
         this.documentDB = new DocumentDatabase_1.DocumentDatabase();
@@ -50,22 +75,22 @@ class ChimeraDB {
      * @returns {void}
      */
     initializeDB() {
-        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const filePath = path.resolve(process.cwd(), `${this.dbName}.cdb.db`);
         if (fs.existsSync(filePath)) {
             this.loadDB();
         }
         else {
             this.saveDB();
-            console.log(`Database ${this.dbName}.cdb created.`);
+            console.log(`Database ${this.dbName}.cdb.db created.`);
         }
     }
     /**
-     * Saves the database to the physical .cdb file.
+     * Saves the database to the physical .cdb.db file.
      *
      * @returns {void}
      */
     saveDB() {
-        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const filePath = path.resolve(process.cwd(), `${this.dbName}.cdb.db`);
         const data = {
             tables: this.tableDB.getTables(),
             collections: this.documentDB.getCollections(),
@@ -73,12 +98,12 @@ class ChimeraDB {
         fs.writeFileSync(filePath, JSON.stringify(data), 'binary');
     }
     /**
-     * Loads the database from the physical .cdb file.
+     * Loads the database from the physical .cdb.db file.
      *
      * @returns {void}
      */
     loadDB() {
-        const filePath = path.resolve(__dirname, `${this.dbName}.cdb`);
+        const filePath = path.resolve(process.cwd(), `${this.dbName}.cdb.db`);
         if (fs.existsSync(filePath)) {
             const dbData = JSON.parse(fs.readFileSync(filePath, 'binary'));
             this.tableDB.setTables(dbData.tables);
@@ -90,6 +115,10 @@ class ChimeraDB {
      *
      * @param {string} name - The name of the table.
      * @param {string[]} columns - The columns of the table.
+     * @example
+     * // Create a new table
+     * const db = new ChimeraDB('my_database');
+     * db.createTable('users', ['id', 'name', 'email']);
      * @returns {void}
      */
     createTable(name, columns) {
@@ -101,6 +130,10 @@ class ChimeraDB {
      *
      * @param {string} name - The name of the table to insert into.
      * @param {any[]} values - The values to insert into the table.
+     * @example
+     * // Insert a row of values into the 'users' table
+     * const db = new ChimeraDB('my_database');
+     * db.insertIntoTable('users', [1, 'John Doe', 'john@example.com']);
      * @returns {void}
      */
     insertIntoTable(name, values) {
@@ -111,6 +144,11 @@ class ChimeraDB {
      * Retrieves all rows from the specified table.
      *
      * @param {string} name - The name of the table to retrieve from.
+     * @example
+     * // Retrieve all rows from the 'users' table
+     * const db = new ChimeraDB('my_database');
+     * const users = db.selectFromTable('users');
+     * console.log(users);
      * @returns {any[][]} An array of rows in the specified table.
      */
     selectFromTable(name) {
@@ -120,6 +158,10 @@ class ChimeraDB {
      * Creates a new collection in the database.
      *
      * @param {string} name - The name of the collection.
+     * @example
+     * // Create a new collection
+     * const db = new ChimeraDB('my_database');
+     * db.createCollection('posts');
      * @returns {void}
      */
     createCollection(name) {
@@ -131,6 +173,10 @@ class ChimeraDB {
      *
      * @param {string} name - The name of the collection to insert into.
      * @param {any} doc - The document to insert.
+     * @example
+     * // Insert a document into the 'posts' collection
+     * const db = new ChimeraDB('my_database');
+     * db.insertIntoCollection('posts', { title: 'Hello World', content: 'This is my first post' });
      * @returns {void}
      */
     insertIntoCollection(name, doc) {
@@ -141,15 +187,43 @@ class ChimeraDB {
      * Retrieves all documents from the specified collection.
      *
      * @param {string} name - The name of the collection to retrieve from.
+     * @example
+     *  Retrieve all documents from the 'posts' collection
+     * const db = new ChimeraDB('my_database');
+     * const posts = db.selectFromCollection('posts');
+     * console.log(posts);
+     * Output:
+     * [
+     *   { title: 'Hello World', content: 'This is my first post' },
+     *   { title: 'Another Post', content: 'This is another post' },
+     *    ...
+     *  ]
      * @returns {any[]} An array of documents in the specified collection.
      */
     selectFromCollection(name) {
+        /**
+         * Retrieves all documents from the specified collection.
+         *
+         * @param {string} name - The name of the collection to retrieve from.
+         * @returns {any[]} An array of documents in the specified collection.
+         */
         return this.documentDB.selectFromCollection(name);
     }
     /**
      * Drops a table from the database.
      *
      * @param {string} name - The name of the table to drop.
+     * @example
+     * // Drop the 'users' table
+     * const db = new ChimeraDB('my_database');
+     * db.dropTable('users');
+     *
+     * @example
+     * // Drop multiple tables
+     * const db = new ChimeraDB('my_database');
+     * db.dropTable('users');
+     * db.dropTable('products');
+     *
      * @returns {void}
      */
     dropTable(name) {
@@ -160,11 +234,53 @@ class ChimeraDB {
      * Drops a collection from the database.
      *
      * @param {string} name - The name of the collection to drop.
+     * @example
+     * // Drop the 'posts' collection
+     * const db = new ChimeraDB('my_database');
+     * db.dropCollection('posts');
+     *
+     * @example
+     * // Drop multiple collections
+     * const db = new ChimeraDB('my_database');
+     * db.dropCollection('posts');
+     * db.dropCollection('comments');
+     *
+     * @returns {void}
+     */
+    /**
+     * Drops a collection from the database.
+     *
+     * @param {string} name - The name of the collection to drop.
      * @returns {void}
      */
     dropCollection(name) {
         this.documentDB.dropCollection(name);
         this.saveDB();
+    }
+    /**
+     * Drops the entire database by deleting the .cdb.db file.
+     *
+     * This function drops the entire database by deleting the .cdb.db file.
+     * The database is deleted from the file system, so all data in the database
+     * is permanently lost.
+     *
+     * @example
+     * // Drop the entire database
+     * const db = new ChimeraDB('my_database');
+     * db.dropDatabase();
+     * console.log('Database deleted.');
+     *
+     * @returns {void}
+     */
+    dropDatabase() {
+        const filePath = path.resolve(process.cwd(), `${this.dbName}.cdb.db`);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`Database ${this.dbName}.cdb.db deleted.`);
+        }
+        else {
+            console.error(`Database ${this.dbName}.cdb.db does not exist.`);
+        }
     }
 }
 exports.ChimeraDB = ChimeraDB;
