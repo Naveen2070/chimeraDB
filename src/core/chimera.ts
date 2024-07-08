@@ -322,4 +322,97 @@ class ChimeraDB {
   }
 }
 
-export { ChimeraDB };
+/**
+ * Retrieves data from a file based on the provided database name.
+ *
+ * This function checks if the file exists in the current working directory.
+ * If the file exists, it reads the file and returns the parsed data as an object.
+ *
+ * @param {string} dbName - The name of the database.
+ * @returns {Object} The data from the file.
+ * @property {Object} tables - An object containing the table definitions.
+ * @property {Object} documents - An object containing the document collections.
+ *
+ * @example
+ * Retrieve data from a file
+ * const dbData = getFile('my_database');
+ * console.log(dbData);
+ * Output:
+ * {
+ *     tables: {
+ *     users: {
+ *        name: 'string',
+ *        age: 'number',
+ *        email: 'string'
+ *      },
+ *      posts: {
+ *        title: 'string',
+ *        content: 'string',
+ *        authorId: 'number'
+ *     }
+ *    },
+ *    documents: {
+ *      users: [
+ *        { name: 'John', age: 25, email: 'john@example.com' },
+ *        { name: 'Jane', age: 30, email: 'jane@example.com' }
+ *      ],
+ *      posts: [
+ *        { title: 'Hello World', content: 'This is my first post', authorId: 1 },
+ *        { title: 'Another Post', content: 'This is another post', authorId: 2 }
+ *      ]
+ *    }
+ *  }
+ *
+ * @throws {Error} If the file does not exist.
+ */
+function getFile(dbName: string): any {
+  const filePath = path.resolve(process.cwd(), `${dbName}.cdb.db`);
+  if (fs.existsSync(filePath)) {
+    return JSON.parse(fs.readFileSync(filePath, 'binary'));
+  }
+  return { tables: {}, documents: {} };
+}
+
+/**
+ * Saves data to a file.
+ *
+ * @param {string} dbName - The name of the database.
+ * @param {any} data - The data to save. This can be an object with tables and collections
+ * properties, or any other data type.
+ *
+ * @example
+ * // Save data to a file
+ * const dbData = {
+ *   tables: {
+ *     users: {
+ *       name: 'string',
+ *       age: 'number',
+ *       email: 'string'
+ *     },
+ *     posts: {
+ *       title: 'string',
+ *       content: 'string',
+ *       authorId: 'number'
+ *     }
+ *   },
+ *   collections: {
+ *     users: [
+ *       { name: 'John', age: 25, email: 'john@example.com' },
+ *       { name: 'Jane', age: 30, email: 'jane@example.com' }
+ *     ],
+ *     posts: [
+ *       { title: 'Hello World', content: 'This is my first post', authorId: 1 },
+ *       { title: 'Another Post', content: 'This is another post', authorId: 2 }
+ *     ]
+ *   }
+ * };
+ *
+ * saveFile('my_database', dbData);
+ *
+ */
+function saveFile(dbName: string, data: any): void {
+  const filePath = path.resolve(process.cwd(), `${dbName}.cdb.db`);
+  fs.writeFileSync(filePath, JSON.stringify(data), 'binary');
+}
+
+export { ChimeraDB, getFile, saveFile };
