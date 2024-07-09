@@ -107,6 +107,5 @@ export type documentFunctionsType = {
      */
     deleteDocument: (dbName: string, id: string) => boolean;
 };
-declare const documentFunctions: documentFunctionsType;
-export default documentFunctions;
+export declare const documentFunctions: documentFunctionsType;
 //# sourceMappingURL=functions.d.ts.map

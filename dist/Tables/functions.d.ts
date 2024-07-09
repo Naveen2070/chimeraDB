@@ -1,4 +1,11 @@
-interface TableRow {
+/**
+ * Represents a table row.
+ *
+ * @interface TableRow
+ * @property {number} id - The id of the row.
+ * @property {any} [key: string] - The value of a column.
+ */
+export interface TableRow {
     id: number;
     [key: string]: any;
 }
@@ -76,6 +83,5 @@ export type tableFunctionsType = {
      */
     deleteRow: (dbName: string, tableName: string, id: number) => boolean;
 };
-declare const tableFunctions: tableFunctionsType;
-export default tableFunctions;
+export declare const tableFunctions: tableFunctionsType;
 //# sourceMappingURL=functions.d.ts.map

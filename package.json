@@ -5,7 +5,7 @@
   "main": "dist/chimera.js",
   "types": "dist/chimera.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" ",
+    "test": "tsc && node example.js",
     "build": "tsc"
   },
   "author": "naveen_r_sam",

@@ -1,12 +1,19 @@
 "use strict";
 // src/Tables/tableOperations.ts
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tableFunctions = void 0;
 const chimera_1 = require("../core/chimera");
-const tableFunctions = {
+const ObjectMaker_1 = require("../utils/ObjectMaker");
+exports.tableFunctions = {
     getById: (dbName, tableName, id) => {
         const tables = (0, chimera_1.getFile)(dbName).tables || {};
-        const table = tables[tableName] || [];
-        return table.find((row) => row.id === id);
+        const table = (0, ObjectMaker_1.convertTableToObjects)(tables[tableName]) || [];
+        console.log('====================================');
+        console.log(`Get table ${tableName} by id ${id}`);
+        console.log('Table:', table);
+        console.log('====================================');
+        const result = table.find((row) => row.id === id);
+        return result;
     },
     getByParams: (dbName, tableName, params) => {
         const tables = (0, chimera_1.getFile)(dbName).tables || {};
@@ -54,5 +61,4 @@ const tableFunctions = {
         return false;
     },
 };
-exports.default = tableFunctions;
 //# sourceMappingURL=functions.js.map

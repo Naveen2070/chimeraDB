@@ -22,24 +22,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = connect;
 exports.create = create;
+exports.queryFunction = queryFunction;
 const chimera_1 = require("./chimera");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const functions_1 = __importDefault(require("../Documents/functions"));
-const functions_2 = __importDefault(require("../Tables/functions"));
+const functions_1 = require("../Documents/functions");
+const functions_2 = require("../Tables/functions");
 /**
  * Connects to an existing ChimeraDB database.
  *
- * This function creates an instance of ChimeraDB with bound functions by connecting to an existing database.
+ * This function creates an instance of ChimeraDB by connecting to an existing database.
  * It takes the name of the database as a parameter and checks if the specified database exists.
- * If the specified database exists, it creates a proxy with a handler that binds the dbName to all function calls.
- * This proxy is then returned as an instance of ChimeraDB with bound functions.
+ * If the specified database exists, it returns the ChimeraDB instance.
  *
  * @example
  * // Connect to an existing database
@@ -49,7 +46,7 @@ const functions_2 = __importDefault(require("../Tables/functions"));
  * db.insertIntoTable('users', [1, 'John Doe', 'john@example.com']);
  *
  * @param {string} dbName - The name of the database to connect to.
- * @returns {ChimeraDB & documentFunctionsType & tableFunctionsType} An instance of ChimeraDB with bound functions.
+ * @returns {ChimeraDB} An instance of ChimeraDB.
  * @throws {Error} Throws an error if the specified database does not exist.
  */
 function connect(dbName) {
@@ -58,33 +55,7 @@ function connect(dbName) {
     // Check if the database exists
     if (fs.existsSync(filePath)) {
         // Create a new instance of ChimeraDB with the specified dbName
-        const dbInstance = new chimera_1.ChimeraDB(dbName);
-        // Create a proxy handler that binds the dbName to all function calls
-        const proxyHandler = {
-            get(target, prop) {
-                // If the property exists in the target object
-                if (prop in target) {
-                    const value = target[prop];
-                    // If the value is a function, bind it to the target object
-                    if (typeof value === 'function') {
-                        return value.bind(target);
-                    }
-                    // Return the value as is
-                    return value;
-                }
-                else if (prop in functions_1.default || prop in functions_2.default) {
-                    // If the property exists in documentFunctions or tableFunctions, create a function that calls the corresponding function with the dbName and the provided arguments
-                    const func = functions_1.default[prop] || functions_2.default[prop];
-                    return (...args) => func(dbName, ...args);
-                }
-                else {
-                    // Throw an error if the property does not exist
-                    throw new Error(`Function ${prop} does not exist.`);
-                }
-            },
-        };
-        // Create a proxy of the combined dbInstance, documentFunctions, and tableFunctions objects with the proxy handler
-        return new Proxy({ ...dbInstance, ...functions_1.default, ...functions_2.default }, proxyHandler);
+        return new chimera_1.ChimeraDB(dbName);
     }
     else {
         // Throw an error if the database does not exist
@@ -118,5 +89,58 @@ function create(dbName) {
         // Create a new instance of ChimeraDB with the specified dbName
         return new chimera_1.ChimeraDB(dbName);
     }
+}
+/**
+ * Provides a way to call functions with the default database name.
+ *
+ * This function creates an instance of a class that supplies functions with the default database name.
+ *
+ * @example
+ * // Query function usage
+ * const query = queryFunction('my_database');
+ * query.createTable('users', ['id', 'name', 'email']);
+ * query.insertIntoTable('users', [1, 'John Doe', 'john@example.com']);
+ *
+ * @param {string} dbName - The default database name.
+ * @returns {object} An object with bound functions.
+ */
+function queryFunction(dbName) {
+    class QueryFunctions {
+        dbInstance;
+        constructor(dbName) {
+            this.dbInstance = connect(dbName);
+            // Table functions
+            this.createTable = (tableName, columns) => this.dbInstance.createTable(tableName, columns);
+            this.insertIntoTable = (tableName, row) => this.dbInstance.insertIntoTable(tableName, row);
+            this.selectFromTable = (tableName) => this.dbInstance.selectFromTable(tableName);
+            this.dropTable = (tableName) => this.dbInstance.dropTable(tableName);
+            // Collection functions
+            this.createCollection = (collectionName) => this.dbInstance.createCollection(collectionName);
+            this.insertIntoCollection = (collectionName, doc) => this.dbInstance.insertIntoCollection(collectionName, doc);
+            this.selectFromCollection = (collectionName) => this.dbInstance.selectFromCollection(collectionName);
+            this.dropCollection = (collectionName) => this.dbInstance.dropCollection(collectionName);
+            // Additional functions from documentFunctions and tableFunctions
+            this.deleteFromTable = (tableName, id) => functions_2.tableFunctions.deleteRow(dbName, tableName, id);
+            this.findInTable = (tableName, id) => functions_2.tableFunctions.getById(dbName, tableName, id);
+            this.deleteFromCollection = (id) => functions_1.documentFunctions.deleteDocument(dbName, id);
+            this.findInCollection = (id) => functions_1.documentFunctions.getById(dbName, id);
+        }
+        // Table functions
+        createTable;
+        insertIntoTable;
+        selectFromTable;
+        dropTable;
+        // Collection functions
+        createCollection;
+        insertIntoCollection;
+        selectFromCollection;
+        dropCollection;
+        // Additional functions from documentFunctions and tableFunctions
+        deleteFromTable;
+        findInTable;
+        deleteFromCollection;
+        findInCollection;
+    }
+    return new QueryFunctions(dbName);
 }
 //# sourceMappingURL=operations.js.map

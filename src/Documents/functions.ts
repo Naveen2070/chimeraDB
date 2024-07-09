@@ -119,7 +119,7 @@ export type documentFunctionsType = {
   deleteDocument: (dbName: string, id: string) => boolean;
 };
 
-const documentFunctions: documentFunctionsType = {
+export const documentFunctions: documentFunctionsType = {
   getById: (dbName: string, id: string): Document | undefined => {
     const documents: Document[] = getFile(dbName).documents || [];
     return documents.find((doc) => doc.id === id);
@@ -169,5 +169,3 @@ const documentFunctions: documentFunctionsType = {
     return false;
   },
 };
-
-export default documentFunctions;

@@ -1,13 +1,12 @@
 import { ChimeraDB } from './chimera';
-import { documentFunctionsType } from '../Documents/functions';
-import { tableFunctionsType } from '../Tables/functions';
+import { TableRow } from '../Tables/functions';
+import { Document } from '../Documents/Document';
 /**
  * Connects to an existing ChimeraDB database.
  *
- * This function creates an instance of ChimeraDB with bound functions by connecting to an existing database.
+ * This function creates an instance of ChimeraDB by connecting to an existing database.
  * It takes the name of the database as a parameter and checks if the specified database exists.
- * If the specified database exists, it creates a proxy with a handler that binds the dbName to all function calls.
- * This proxy is then returned as an instance of ChimeraDB with bound functions.
+ * If the specified database exists, it returns the ChimeraDB instance.
  *
  * @example
  * // Connect to an existing database
@@ -17,10 +16,10 @@ import { tableFunctionsType } from '../Tables/functions';
  * db.insertIntoTable('users', [1, 'John Doe', 'john@example.com']);
  *
  * @param {string} dbName - The name of the database to connect to.
- * @returns {ChimeraDB & documentFunctionsType & tableFunctionsType} An instance of ChimeraDB with bound functions.
+ * @returns {ChimeraDB} An instance of ChimeraDB.
  * @throws {Error} Throws an error if the specified database does not exist.
  */
-declare function connect(dbName: string): ChimeraDB & documentFunctionsType & tableFunctionsType;
+declare function connect(dbName: string): ChimeraDB;
 /**
  * Creates a new database.
  *
@@ -37,5 +36,34 @@ declare function connect(dbName: string): ChimeraDB & documentFunctionsType & ta
  * @throws {Error} Throws an error if the specified database already exists.
  */
 declare function create(dbName: string): ChimeraDB;
-export { connect, create };
+/**
+ * Provides a way to call functions with the default database name.
+ *
+ * This function creates an instance of a class that supplies functions with the default database name.
+ *
+ * @example
+ * // Query function usage
+ * const query = queryFunction('my_database');
+ * query.createTable('users', ['id', 'name', 'email']);
+ * query.insertIntoTable('users', [1, 'John Doe', 'john@example.com']);
+ *
+ * @param {string} dbName - The default database name.
+ * @returns {object} An object with bound functions.
+ */
+declare function queryFunction(dbName: string): {
+    dbInstance: ChimeraDB;
+    createTable: (tableName: string, columns: string[]) => void;
+    insertIntoTable: (tableName: string, row: any) => void;
+    selectFromTable: (tableName: string, criteria: any) => any[];
+    dropTable: (tableName: string) => void;
+    createCollection: (collectionName: string) => void;
+    insertIntoCollection: (collectionName: string, doc: any) => void;
+    selectFromCollection: (collectionName: string, criteria: any) => any[];
+    dropCollection: (collectionName: string) => void;
+    deleteFromTable: (tableName: string, id: number) => boolean;
+    findInTable: (tableName: string, id: number) => TableRow | undefined;
+    deleteFromCollection: (id: string) => boolean;
+    findInCollection: (id: string) => Document | undefined;
+};
+export { connect, create, queryFunction };
 //# sourceMappingURL=operations.d.ts.map

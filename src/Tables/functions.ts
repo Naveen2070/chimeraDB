@@ -1,8 +1,16 @@
 // src/Tables/tableOperations.ts
 
 import { getFile, saveFile } from '../core/chimera';
+import { convertTableToObjects } from '../utils/ObjectMaker';
 
-interface TableRow {
+/**
+ * Represents a table row.
+ *
+ * @interface TableRow
+ * @property {number} id - The id of the row.
+ * @property {any} [key: string] - The value of a column.
+ */
+export interface TableRow {
   id: number;
   [key: string]: any;
 }
@@ -100,15 +108,20 @@ export type tableFunctionsType = {
   deleteRow: (dbName: string, tableName: string, id: number) => boolean;
 };
 
-const tableFunctions: tableFunctionsType = {
+export const tableFunctions: tableFunctionsType = {
   getById: (
     dbName: string,
     tableName: string,
     id: number
   ): TableRow | undefined => {
     const tables = getFile(dbName).tables || {};
-    const table = tables[tableName] || [];
-    return table.find((row: TableRow) => row.id === id);
+    const table = convertTableToObjects(tables[tableName]) || [];
+    console.log('====================================');
+    console.log(`Get table ${tableName} by id ${id}`);
+    console.log('Table:', table);
+    console.log('====================================');
+    const result = table.find((row: TableRow) => row.id === id);
+    return result;
   },
   getByParams: (
     dbName: string,
@@ -170,5 +183,3 @@ const tableFunctions: tableFunctionsType = {
     return false;
   },
 };
-
-export default tableFunctions;

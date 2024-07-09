@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.documentFunctions = void 0;
 const chimera_1 = require("../core/chimera");
-const documentFunctions = {
+exports.documentFunctions = {
     getById: (dbName, id) => {
         const documents = (0, chimera_1.getFile)(dbName).documents || [];
         return documents.find((doc) => doc.id === id);
@@ -47,5 +48,4 @@ const documentFunctions = {
         return false;
     },
 };
-exports.default = documentFunctions;
 //# sourceMappingURL=functions.js.map
