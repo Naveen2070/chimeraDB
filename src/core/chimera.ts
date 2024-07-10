@@ -412,7 +412,15 @@ function getFile(dbName: string): any {
  */
 function saveFile(dbName: string, data: any): void {
   const filePath = path.resolve(process.cwd(), `${dbName}.cdb.db`);
-  fs.writeFileSync(filePath, JSON.stringify(data), 'binary');
+  console.log(`Saving to file: ${filePath}`);
+
+  try {
+    const jsonData = JSON.stringify(data, null, 2); // Pretty-print JSON for readability
+    fs.writeFileSync(filePath, jsonData, { encoding: 'utf8' });
+    console.log(`Database ${dbName} saved successfully.`);
+  } catch (error) {
+    console.error(`Error saving database ${dbName}:`, error);
+  }
 }
 
 export { ChimeraDB, getFile, saveFile };

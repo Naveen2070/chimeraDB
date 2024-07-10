@@ -1,7 +1,10 @@
 // src/Tables/tableOperations.ts
 
 import { getFile, saveFile } from '../core/chimera';
-import { convertTableToObjects } from '../utils/ObjectMaker';
+import {
+  convertObjectsToTable,
+  convertTableToObjects,
+} from '../utils/ObjectMaker';
 
 /**
  * Represents a table row.
@@ -116,10 +119,6 @@ export const tableFunctions: tableFunctionsType = {
   ): TableRow | undefined => {
     const tables = getFile(dbName).tables || {};
     const table = convertTableToObjects(tables[tableName]) || [];
-    console.log('====================================');
-    console.log(`Get table ${tableName} by id ${id}`);
-    console.log('Table:', table);
-    console.log('====================================');
     const result = table.find((row: TableRow) => row.id === id);
     return result;
   },
@@ -129,7 +128,7 @@ export const tableFunctions: tableFunctionsType = {
     params: Partial<TableRow>
   ): TableRow[] => {
     const tables = getFile(dbName).tables || {};
-    const table = tables[tableName] || [];
+    const table = convertTableToObjects(tables[tableName]) || [];
     return table.filter((row: TableRow) => {
       return Object.keys(params).every((key) => row[key] === params[key]);
     });
@@ -141,7 +140,7 @@ export const tableFunctions: tableFunctionsType = {
     value: any
   ): TableRow[] => {
     const tables = getFile(dbName).tables || {};
-    const table = tables[tableName] || [];
+    const table = convertTableToObjects(tables[tableName]) || [];
     return table.filter((row: TableRow) => row[key] === value);
   },
   addRow: (dbName: string, tableName: string, row: TableRow): void => {
@@ -172,11 +171,12 @@ export const tableFunctions: tableFunctionsType = {
   deleteRow: (dbName: string, tableName: string, id: number): boolean => {
     const db = getFile(dbName);
     const tables = db.tables || {};
-    const table = tables[tableName] || [];
+    const table = convertTableToObjects(tables[tableName]) || [];
     const index = table.findIndex((row: TableRow) => row.id === id);
     if (index !== -1) {
       table.splice(index, 1);
-      db.tables[tableName] = table;
+      const updatedTable = convertObjectsToTable('users', table);
+      db.tables[tableName] = updatedTable.rows;
       saveFile(dbName, db);
       return true;
     }

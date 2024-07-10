@@ -4,4 +4,5 @@ export interface TableRow {
     [key: string]: any;
 }
 export declare function convertTableToObjects(table: Table): TableRow[];
+export declare function convertObjectsToTable(tableName: string, objects: TableRow[]): Table;
 //# sourceMappingURL=ObjectMaker.d.ts.map

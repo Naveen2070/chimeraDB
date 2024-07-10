@@ -13,3 +13,21 @@ export function convertTableToObjects(table: Table): TableRow[] {
     }, {} as TableRow);
   });
 }
+
+export function convertObjectsToTable(
+  tableName: string,
+  objects: TableRow[]
+): Table {
+  if (objects.length === 0) {
+    return { name: tableName, columns: [], rows: [] };
+  }
+
+  const columns = Object.keys(objects[0]);
+  const rows = objects.map((obj) => columns.map((col) => obj[col]));
+
+  return {
+    name: tableName,
+    columns,
+    rows,
+  };
+}
