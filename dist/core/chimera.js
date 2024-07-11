@@ -378,9 +378,6 @@ function saveFile(dbName, data) {
     console.log(`Saving to file: ${filePath}`);
     try {
         const jsonData = JSON.stringify(data, null, 2); // Pretty-print JSON for readability
-        console.log('====================================');
-        console.log(jsonData);
-        console.log('====================================');
         fs.writeFileSync(filePath, jsonData, { encoding: 'utf8' });
         console.log(`Database ${dbName} saved successfully.`);
     }

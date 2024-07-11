@@ -32,7 +32,7 @@ function Db() {
 }
 
 // Run the database operations
-// Db();
+Db();
 
 // Function to retrieve data from the database
 function getDb() {
